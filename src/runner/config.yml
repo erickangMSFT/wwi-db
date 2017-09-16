@@ -1,0 +1,7 @@
+---
+migration_file: version-map.json
+server: kubernetes
+port: 31386
+database: WideWorldImporters
+user: sa
+password: Yukon900
