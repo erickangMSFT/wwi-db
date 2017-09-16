@@ -1,0 +1,5 @@
+[
+  {
+    "value": "{\n            \"migrationID\": 2,\n            \"description\": \"Version 1.0.1 fix for Website.InsertCustomerOrders\",\n            \"version\": {\n                \"major\": 1,\n                \"minor\": 1,\n                \"revision\": 0\n            },\n            \"files\": [\n                {\n                    \"executionOrder\": 1,\n                    \"name\": \"migrations/version1.0.1/wwi_db_changes_1.0.1.sql\"\n                }\n            ]\n        }"
+  }
+]
