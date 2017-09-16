@@ -1,7 +1,7 @@
 ---
 migration_file: version-map.json
-server: 192.168.99.100 
-port: 31386
-database: WideWorldImporters
+server: localhost 
+port: 1433 
+database: master 
 user: sa
 password: Yukon900
