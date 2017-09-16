@@ -13,9 +13,11 @@ def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config-file', dest='config_file', default=__config_file)
     args = parser.parse_args()
-    
+
     runner_config = RunnerConfig(args.config_file)
     version_control = VersionControl(runner_config.migration_file)
+    sources = pyodbc.dataSources()
+    print (sources)
     sql = SQL(runner_config)
     sql.connect()
 
@@ -102,11 +104,11 @@ class SQL:
     def connect(self):
         try:
             print ('Connecting SQL Server...')
-            connection = pyodbc.connect(self.__con_str)
-            cursor = connection.cursor()
-            tsql = "select @@version"
-            rows = cursor.execute(tsql).fetchall():
-                print (rows)
+            with pyodbc.connect(self.__con_str) as cnxn:
+            	cursor = cnxn.cursor()
+            	tsql = "select @@version"
+            	rows = cursor.execute(tsql).fetchall()
+            	print (rows)
         except Exception, e:
             print(str(e))
             print('connection string: ' + self.__con_str)
@@ -116,7 +118,7 @@ class SQL:
     def __build_connection_string__(self):
         con_str = 'DRIVER={ODBC Driver 13 for SQL Server};SERVER=' + self.config.server
         con_str += ';PORT=' + str(self.config.port)
-        # con_str += ';DATABASE=' + self.config.database
+        con_str += ';DATABASE=' + self.config.database
         con_str += ';UID=' + self.config.user
         con_str += ';PWD=' + self.config.password
         return con_str
