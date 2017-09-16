@@ -16,8 +16,7 @@ def main(argv):
 
     runner_config = RunnerConfig(args.config_file)
     version_control = VersionControl(runner_config.migration_file)
-    sources = pyodbc.dataSources()
-    print (sources)
+    
     sql = SQL(runner_config)
     sql.connect()
 
