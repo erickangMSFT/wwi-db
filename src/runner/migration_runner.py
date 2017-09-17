@@ -6,13 +6,13 @@ import json
 import yaml
 import pyodbc
 
-__version_map_json = './version-map.json'
-__config_file = './config.yml'
+__CONFIG_FILE = './config.yml'
 
 def main(argv):
+    """ main function """
     db_version = ''
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config-file', dest='config_file', default=__config_file)
+    parser.add_argument('-c', '--config-file', dest='config_file', default=__CONFIG_FILE)
     args = parser.parse_args()
 
     runner_config = RunnerConfig(args.config_file)
@@ -20,28 +20,29 @@ def main(argv):
     sql = SQL(runner_config)
 
     version_control.init_version_control(sql)
-    db_version = json.loads(Util.sqljson_to_pyjson(sql.get_db_version()))
-    print ('{0}current database version: {1}.{2}.{3}{4}\n'
-        .format(bcolors.HEADER, 
-                db_version['major_version'], 
-                db_version['minor_version'], 
-                db_version['revision'], 
-                bcolors.ENDC))
+    version_control.print_db_version(sql)
     version_control.build_migration_plan(db_version)
-    version_control.run_migration_plan(sql)
+    if version_control.is_up_to_date():
+        print('{0}The database is up-to-date.{1}\n'.format(bcolors.OKGREEN, bcolors.ENDC))
+    else: 
+        version_control.run_migration_plan(sql)
+        version_control.print_db_version(sql)
 
 class VersionControl:
-    __min_idex = -1
+    """ database version control """
+    __min_index = -1
     __max_index = -1
     __database_version_index = -1
     __version_map = json.dumps('[]')
 
     def __init__(self, map_file):
         self.migration_id = ''
-        self.migration_data = json.dumps('[]')
-        self.migration_workload = json.dumps('[]')
+        self.migration_data = {}
+        self.migration_plan = {}
+        self.initial_plan = {}
 
         self.__version_map = json.loads(self.__load_json_map__(map_file))
+
         return
     
     # read version-map.json file and load it into a json object.
@@ -50,19 +51,24 @@ class VersionControl:
             migrations = json.loads(FILE_version_file.read())
         return json.dumps(migrations)
 
-    # initialize version control
+    def __get_initial_plan__(self):
+        self.initial_plan = self.__version_map[0]
+        return 
+
     def init_version_control(self, sql):
-        print('{0}initializing database version control...{1}'
-            .format(bcolors.CYAN, bcolors.ENDC))
+        """  initialize version control """
+        print('{0}initializing database version control...{1}'.format(bcolors.CYAN, bcolors.ENDC))
         try:
-            sql.init_db_versioning()
-        
-        except Exception as e:
-            print('{0}database version initialization failed{1}\n'
-                .format(bcolors.FAIL,bcolors.ENDC))
-            print('{0}{1}{2}\n'
-                .format(bcolors.FAIL, str(e), bcolors.ENDC))
-            Util.terminate        
+            if sql.check_version_structure():
+                print('{0}database versioning is already enabled. skipping...{1}'.format(bcolors.CYAN, bcolors.ENDC))
+                return
+            self.__get_initial_plan__()
+            sql.execute_plan(json.dumps(self.initial_plan))
+            sql.set_db_version(json.dumps(self.initial_plan))
+        except Exception as ex:
+            print('{0}database version initialization failed{1}\n'.format(bcolors.FAIL,bcolors.ENDC))
+            print('{0}{1}{2}\n'.format(bcolors.FAIL, str(ex), bcolors.ENDC))
+            Util.terminate()        
         return
 
     # build a migration plan
@@ -80,14 +86,34 @@ class VersionControl:
             raise ValueError('Detected an invalid migration sequence.')
             
         else:
-            self.migration_id = self.__version_map[__max_index]['migrationID']
-            self.migration_data = json.dumps(self.__version_map[__max_index])
+            self.__max_index = self.__version_map[__max_index]['migrationID']
+            print ('{0}target migrationID: {1}{2}\n'.format(bcolors.HEADER, self.__max_index, bcolors.ENDC))
+            plan_list =[]
+            for i in range(self.__min_index, self.__max_index):
+                plan_list.append(self.__version_map[i])
+            self.migration_plan = json.dumps(plan_list)
         return
 
-    def run_migration_plan (self,sql):
-        print('{0}running migrations{1}'
-            .format(bcolors.CYAN, bcolors.ENDC))
+    def run_migration_plan (self, sql):
+        print('{0}running migration plans...{1}'.format(bcolors.CYAN, bcolors.ENDC))
+        plans = json.loads(self.migration_plan)
+        for plan in plans:
+            sql.execute_plan(json.dumps(plan))
+            sql.set_db_version(json.dumps(plan))
+        print('{0}The migration is complete.{1}'.format(bcolors.OKGREEN, bcolors.ENDC))
         return
+
+    def print_db_version(self,sql):
+        db_version = json.loads(Util.sqljson_to_pyjson(sql.get_db_version()))
+        self.__min_index = db_version['migrationID']
+        print ('{0}current database version: {1}.{2}.{3}{4}'.format(bcolors.HEADER, db_version['major_version'], db_version['minor_version'], db_version['revision'], bcolors.ENDC))
+        print ('{0}current migrationID: {1}{2}\n'.format(bcolors.HEADER, self.__min_index, bcolors.ENDC))
+        return
+
+    def is_up_to_date(self):
+        if self.__min_index == self.__max_index:
+            return True
+        return False
 
 class RunnerConfig:
     def __init__(self,config_file):
@@ -99,7 +125,6 @@ class RunnerConfig:
         self.password = ''
 
         self.__load_config__(config_file)
-        
         return
 
     # load migration runner configuration from config.yml file.
@@ -129,83 +154,84 @@ class SQL:
         con_str += ';PWD=' + self.config.password
         return con_str
 
-    # internal: initialize versioning on the connected database
-    def init_db_versioning(self):
-        if self.__check_versioning__():
-            return
-        self.__create_version_structure__()
-        return
-
     # check whether db versioning is already enabled in the connected database
-    def __check_versioning__(self):
+    def check_version_structure(self):
         __tsql = 'select case when (object_id(\'dbo.versionMap\', \'U\') is null) then 0 else 1 end'
         result = self.execute(__tsql)
-        if result[0] == 1:
+        if int(result[0]) == 1:
             return True
         return False
 
-    # create necessary schedule objects to record versioning on the connected database: demo purpose only.
-    # in a non-demo scenario, operation should fail out if a database does not have a versioning mechanism enabled.
-    def __create_version_structure__(self):
-        print ('\n{0}creating database versioning schema...{1}\n'
-            .format(bcolors.CYAN, bcolors.ENDC))
-        self.run_migration_workload()
+    def execute_plan(self, plan):
+        script_files = {}
+        print ('\n{0}executing migration plan...{1}\n'.format(bcolors.CYAN, bcolors.ENDC))
+        plan = json.loads(plan)
+        script_files = plan['files']
+        for script_file in script_files:
+            with open(str(script_file['name']), "r") as FILE_sql_script:
+                sql_script = FILE_sql_script.read()
+                for batch in sql_script.split('GO'):
+                    if len(batch) > 0:
+                        self.execute_no_query(batch)
         return
-    
+
+    def execute_no_query(self, sql_script):
+        try:
+            print ('\n{0}Executing:{1} {2}\n'.format(bcolors.CYAN, bcolors.ENDC, sql_script))
+            with pyodbc.connect(self.__con_str) as cnxn:
+                cursor = cnxn.cursor()
+                cursor.execute(sql_script)
+        except Exception as ex:
+            print('{0}Query Execution Failed:{1}\n'.format(bcolors.FAIL, bcolors.ENDC))
+            print('{0}{1}{2}\n'.format(bcolors.FAIL, str(ex), bcolors.ENDC))
+            Util.terminate()
+        return
+
     # execute any sql query and return the result to be loaded in json
-    def execute(self,sql_script):
+    def execute(self, sql_script):
         result = []
         try:
-            print ('\n{0}Executing:{1} {2}\n'
-                .format(bcolors.CYAN, bcolors.ENDC, sql_script))
-            
+            print ('\n{0}Executing:{1} {2}\n'.format(bcolors.CYAN, bcolors.ENDC, sql_script))
             with pyodbc.connect(self.__con_str) as cnxn:
-            	cursor = cnxn.cursor()
-            	rows = cursor.execute(sql_script).fetchall()
+                cursor = cnxn.cursor()
+                rows = cursor.execute(sql_script).fetchall()
                 for row in rows:
-                     result.append(list(row))
-            
-            print ('{0}Done!{1}\n'
-                .format(bcolors.CYAN, bcolors.ENDC))
-
-        except Exception as e:
-            print('{0}Query Execution Failed:{1}\n'
-                .format(bcolors.FAIL,bcolors.ENDC))
-            print('{0}{1}{2}\n'
-                .format(bcolors.FAIL, str(e), bcolors.ENDC))
-            Util.terminate()            
+                    result.append(list(row)[0])
+        except Exception as ex:
+            print('{0}Query Execution Failed:{1}\n'.format(bcolors.FAIL, bcolors.ENDC))
+            print('{0}{1}{2}\n'.format(bcolors.FAIL, str(ex), bcolors.ENDC))
+            Util.terminate()
         return result
-    
+
     # after a db migration is successfully complete, set the new version number to the target database.
     def set_db_version(self, version_data):
         json_data = json.loads(version_data)
-        __tsql = 'exec dbo.setVersion @json = N\'[' + json.dumps(json_data) + ']\''
-        return self.execute(__tsql)
+        __tsql = 'exec dbo.setVersion @version_data = N\'[' + json.dumps(json_data) + ']\''
+        return self.execute_no_query(__tsql)
     
     # query the version number of connected database.
     def get_db_version(self):
         __tsql = 'select TOP(1) * from dbo.versionMap order by migrationID desc for json path'
         return self.execute(__tsql)
 
-    # run migration workloads in SQL.
-    def run_migration_workload(self, migration_plan):
-        return
 
 class Util:
 
-    # sql server for json option return extra header and footer characters in pyodbc.
-    # it causes a deserialization failure with python json module. 
-    # clean up the extra characters.
+    """ sql server for json option return extra header and footer characters in pyodbc.
+    it causes a deserialization failure with python json module. 
+    clean up the extra characters. """
+
     @staticmethod
     def sqljson_to_pyjson(sql_string):
+        """ convert sql json data to python json format """
         result_str = str(sql_string).lstrip('[[u\'')
-        result_str =  result_str.rstrip('\']]')
+        result_str = result_str.rstrip('\']]')
         return result_str
 
     @staticmethod
     def terminate():
-        print('{0}Terminating migration.{1}\n'
-                .format(bcolors.FAIL, bcolors.ENDC))
+        """ terminate process """
+        print('{0}Terminating migration.{1}\n'.format(bcolors.FAIL, bcolors.ENDC))
         sys.exit()
 
 class bcolors:

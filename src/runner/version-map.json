@@ -6,6 +6,46 @@
             "major": 1,
             "minor": 0,
             "revision": 0
-        }
+        },
+        "files": [
+            {
+                "executionOrder": 1,
+                "name": "../migrations/version1.0/wwi_db_change_1.0.0.sql"
+            }
+        ]
+    },
+    {
+        "migrationID": 2,
+        "description": "Version 1.0.1 fix for Website.InsertCustomerOrders",
+        "version": {
+            "major": 1,
+            "minor": 1,
+            "revision": 0
+        },
+        "files": [
+            {
+                "executionOrder": 1,
+                "name": "../migrations/version1.0.1/wwi_db_changes_1.0.1.sql"
+            }
+        ]
+    },
+    {
+        "migrationID": 3,
+        "description": "Version 1.0.2 fix for Website.InsertCustomerOrders",
+        "version": {
+            "major": 1,
+            "minor": 1,
+            "revision": 1
+        },
+        "files": [
+            {
+                "executionOrder": 1,
+                "name": "../migrations/version1.0.1/wwi_db_changes_1.0.1.sql"
+            },
+            {
+                "executionOrder": 2,
+                "name": "../migrations/version1.0.1/wwi_db_changes_1.0.1.sql"
+            }
+        ]
     }
 ]

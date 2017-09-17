@@ -8,7 +8,7 @@ BEGIN
         minor_version int NOT NULL,
         revision int NOT NULL,
         deployment_date datetime2(7) NOT NULL
-    );
+    )
 END
 GO
 
@@ -45,24 +45,5 @@ BEGIN
         deployment_date
     FROM dbo.versionMap
     ORDER BY migrationID DESC
-END
-GO
-
-IF (NOT EXISTS (SELECT 1 from dbo.versionMap))
-BEGIN 
-    -- Setting WideWorldImporters database to version 1 just for a demo purpose.
-
-    DECLARE @json NVARCHAR(MAX)
-    SET @json =  N'[
-    {
-        "migrationID": 1,
-        "description": "Version 1.0 WideWorldImporters",
-        "version": {
-            "major": 1,
-            "minor": 0,
-            "revision": 0
-        }
-    }]'
-    exec dbo.setVersion @json;
 END
 GO
