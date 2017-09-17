@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import os
 import argparse
 import json
 import yaml
@@ -124,6 +125,9 @@ class RunnerConfig:
         self.user = ''
         self.password = ''
 
+        cwd = os.getcwd()
+        config_file = cwd + '/' + config_file
+        print config_file
         self.__load_config__(config_file)
         return
 

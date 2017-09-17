@@ -1,0 +1,6 @@
+migration_file: version-map.json
+server: mssql 
+port: 31441
+database: WideWorldImporters
+user: sa
+password: Yukon900

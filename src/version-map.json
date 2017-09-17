@@ -10,7 +10,7 @@
         "files": [
             {
                 "executionOrder": 1,
-                "name": "../migrations/version1.0/wwi_db_change_1.0.0.sql"
+                "name": "./migrations/version1.0/wwi_db_change_1.0.0.sql"
             }
         ]
     },
@@ -25,7 +25,7 @@
         "files": [
             {
                 "executionOrder": 1,
-                "name": "../migrations/version1.0.1/wwi_db_changes_1.0.1.sql"
+                "name": "./migrations/version1.0.1/wwi_db_changes_1.0.1.sql"
             }
         ]
     }
