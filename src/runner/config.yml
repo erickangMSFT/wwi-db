@@ -1,7 +1,6 @@
----
 migration_file: version-map.json
-server: localhost 
-port: 1433 
-database: master 
+server: kubernetes 
+port: 32188 
+database: WideWorldImportersTest
 user: sa
 password: Yukon900
