@@ -57,7 +57,7 @@ class VersionControl:
         try:
             sql.init_db_versioning()
         
-        except Exception, e:
+        except Exception as e:
             print('{0}database version initialization failed{1}\n'
                 .format(bcolors.FAIL,bcolors.ENDC))
             print('{0}{1}{2}\n'
@@ -168,7 +168,7 @@ class SQL:
             print ('{0}Done!{1}\n'
                 .format(bcolors.CYAN, bcolors.ENDC))
 
-        except Exception, e:
+        except Exception as e:
             print('{0}Query Execution Failed:{1}\n'
                 .format(bcolors.FAIL,bcolors.ENDC))
             print('{0}{1}{2}\n'
