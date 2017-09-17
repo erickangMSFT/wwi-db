@@ -7,7 +7,7 @@ import json
 import yaml
 import pyodbc
 
-__CONFIG_FILE = './config.yml'
+__CONFIG_FILE = 'config.yml'
 
 def main(argv):
     """ main function """
