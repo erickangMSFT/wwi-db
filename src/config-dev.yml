@@ -1,6 +1,6 @@
 migration_file: version-map.json
 server: kubernetes 
-port: 31441
+port: 31431
 database: WideWorldImporters
 user: sa
 password: Yukon900
