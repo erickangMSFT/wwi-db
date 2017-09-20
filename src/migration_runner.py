@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# todo: enable transaction support for database version migration
+# do not use this script for non-demo purpose.
+
 import sys
 import os
 import argparse
@@ -16,16 +19,21 @@ def main(argv):
     parser.add_argument('-c', '--config-file', dest='config_file', default=__CONFIG_FILE)
     args = parser.parse_args()
 
+    # load configuration yml file, version change map json file and initialize sql connection object.
     runner_config = RunnerConfig(args.config_file)
     version_control = VersionControl(runner_config.migration_file)
     sql = SQL(runner_config)
 
+    # initialize version control on the target database if not enabled : demo only.
     version_control.init_version_control(sql)
     version_control.print_db_version(sql)
+
+    # build a database version migration plan.
     version_control.build_migration_plan(db_version)
     if version_control.is_up_to_date():
         print('{0}The database is up-to-date.{1}\n'.format(bcolors.OKGREEN, bcolors.ENDC))
     else: 
+        # run database version migrations.
         version_control.run_migration_plan(sql)
         version_control.print_db_version(sql)
 
@@ -127,7 +135,6 @@ class RunnerConfig:
 
         cwd = os.getcwd()
         config_file = cwd + '/' + config_file
-        print config_file
         self.__load_config__(config_file)
         return
 
