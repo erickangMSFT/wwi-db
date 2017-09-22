@@ -3,4 +3,4 @@ server: kubernetes
 port: 31431
 database: WideWorldImporters
 user: sa
-password: Yukon900
+password: SqlDevOps2017
