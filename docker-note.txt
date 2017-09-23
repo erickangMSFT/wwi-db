@@ -1,0 +1,14 @@
+FROM python:2.7-alpine3.6
+
+apk --update add gcc g++ unixodbc-dev
+
+pip install pyodbc
+
+FROM ericskang/sqltools:sqlcmd
+
+RUN apt-get update && apt-get install -y python python-pip \ 
+    && apt clean && pip install --upgrade pip \
+    && pip install pyodbc pyyaml
+
+WORKDIR /user/src/wwi
+COPY src .

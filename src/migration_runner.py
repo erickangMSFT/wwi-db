@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python
 
 # todo: enable transaction support for database version migration
 # do not use this script for non-demo purpose.
@@ -158,7 +158,8 @@ class SQL:
     
     # internal: build a connection string from config.yml file
     def __build_connection_string__(self):
-        con_str = 'DRIVER={ODBC Driver 13 for SQL Server};SERVER=' + self.config.server
+        #con_str = 'DRIVER={ODBC Driver 13 for SQL Server};SERVER=' + self.config.server
+        con_str = 'DRIVER={SQL Server};SERVER=' + self.config.server
         con_str += ',' + str(self.config.port)
         con_str += ';DATABASE=' + self.config.database
         con_str += ';UID=' + self.config.user
