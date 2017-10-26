@@ -1,4 +1,4 @@
 #!/bin/bash
-docker build . --rm -t ericskang/db-jobs:migration
+docker build . --rm -t sqlpass.azurecr.io/db-jobs:migration
 
-docker push ericskang/db-jobs:migration
+docker push sqlpass.azurecr.io/db-jobs:migration
