@@ -1,7 +1,7 @@
 version: '2'
 services:
   webapp:
-    image: sqlpass.azurecr.io/webapp:latest
+    build: ./web_app
     depends_on:
       - mssql
     container_name: webapp
