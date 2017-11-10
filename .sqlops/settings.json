@@ -1,0 +1,108 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "dashboard.database.widgets": [
+        {
+            "name": "Qeury Store: Slow Query",
+            "gridItemConfig": {
+                "sizex": 2,
+                "sizey": 1
+            },
+            "widget": {
+                "query-data-store-db-insight": null
+            }
+        },
+        {
+            "name": "Table Space",
+            "gridItemConfig": {
+                "sizex": 2,
+                "sizey": 1
+            },
+            "widget": {
+                "table-space-db-insight": null
+            }
+        },
+        {
+            "name": "Active Connections",
+            "gridItemConfig": {
+                "sizex": 1,
+                "sizey": 1
+            },
+            "widget": {
+                "insights-widget": {
+                    "type": {
+                        "count": {
+                            "dataDirection": "vertical",
+                            "dataType": "number",
+                            "legendPosition": "none",
+                            "labelFirstColumn": false,
+                            "columnsAsLabels": false
+                        }
+                    },
+                    "queryFile": "${workspaceRoot}/activeconnection.sql"
+                }
+            }
+        },
+        {
+            "name": "Search",
+            "gridItemConfig": {
+                "sizex": 1,
+                "sizey": 1
+            },
+            "widget": {
+                "explorer-widget": {}
+            }
+        },
+        {
+            "name": "Tasks",
+            "gridItemConfig": {
+                "sizex": 1,
+                "sizey": 1
+            },
+            "widget": {
+                "tasks-widget": {}
+            }
+        }
+        
+    ],
+    "dashboard.server.widgets": [
+        {
+            "name": "Database",
+            "gridItemConfig": {
+                "sizex": 1,
+                "sizey": 1
+            },
+            "widget": {
+                "explorer-widget": {}
+            }
+        },
+        
+        {
+            "name": "Tasks",
+            "widget": {
+                "tasks-widget": {}
+            },
+            "gridItemConfig": {
+                "sizex": 1,
+                "sizey": 1
+            }
+        },
+      
+        {
+            "name": "Backup Status",
+            "widget": {
+                "backup-history-server-insight": null
+            }
+        },
+        {
+            "name": "Database size",
+            "gridItemConfig": {
+                "sizex": 2,
+                "sizey": 1
+            },
+            "widget": {
+                "all-database-size-server-insight": null
+            }
+        },
+
+    ]
+}
